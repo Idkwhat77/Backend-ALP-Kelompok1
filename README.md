@@ -13,6 +13,10 @@ This is a Challenge Based Learning (CBL) project focused on creating an interact
 > [!NOTE]
 > This project is currently in development phase. Database configuration and deployment strategies may change for production environments.
 
+# Frontend-ALP-Kelompok1
+
+Github Repo Link: [Frontend Deployment](https://idkwhat77.github.io/Frontend-ALP-Kelompok1/)
+
 ## 👥 Team Members
 1. Aristo Benedict Iskandar
 2. Exsel Octaviand Gosal
