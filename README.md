@@ -1,21 +1,13 @@
-# ALP Final Project - Kelompok 1
+# ALP Final Project - Kelompok 1 (Backend)
 
-[![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?style=flat&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 [![Java](https://img.shields.io/badge/Java-17+-orange?style=flat&logo=openjdk)](https://openjdk.org/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.0+-green?style=flat&logo=springboot)](https://spring.io/projects/spring-boot)
-[![HTML5](https://img.shields.io/badge/HTML5-gray?style=flat&logo=html5)](https://developer.mozilla.org/en-US/docs/Web/HTML)
-[![CSS3](https://img.shields.io/badge/CSS3-blue?style=flat&logo=css3)](https://developer.mozilla.org/en-US/docs/Web/CSS)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-v4-38B2AC?style=flat&logo=tailwindcss)](https://tailwindcss.com/)
 [![MySQL](https://img.shields.io/badge/MySQL-8.0+-4479A1?style=flat&logo=mysql&logoColor=white)](https://www.mysql.com/)
 
-This is a Challenge Based Learning (CBL) project focused on creating an interactive platform to reduce unemployment in Indonesia. The project implements a full-stack web application with modern technologies and follows professional development practices.
+This is the backend repository for a Challenge Based Learning (CBL) project focused on creating an interactive platform to reduce unemployment in Indonesia. The project implements the server-side logic and API for a full-stack web application using modern technologies and follows professional development practices.
 
 > [!NOTE]
 > This project is currently in development phase. Database configuration and deployment strategies may change for production environments.
-
-# Frontend-ALP-Kelompok1
-
-Github Frontend Repo Link: [idkwhat77/Frontend-ALP-Kelompok1/](https://github.com/Idkwhat77/Frontend-ALP-Kelompok1)
 
 ## 👥 Team Members
 1. Aristo Benedict Iskandar
@@ -24,6 +16,8 @@ Github Frontend Repo Link: [idkwhat77/Frontend-ALP-Kelompok1/](https://github.co
 4. Stella J. Chandra
 
 ## 💡 Project Overview
+
+This repository contains the backend implementation for the project.
 
 ### Big Idea
 ### Sosial : Pengangguran 
@@ -36,14 +30,6 @@ Bagaimana cara membuat interaksi agar dapat mengurangi pengangguran di Indonesia
 Membuat sebuah interaksi agar dapat mengurangi pengangguran di Indonesia
 
 ## 🛠️ Tech Stack
-
-### Frontend
-| Technology | Badge | Description |
-|------------|-------|-------------|
-| **JavaScript ES6+** | ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat&logo=javascript&logoColor=black) | Modern client-side programming language |
-| **HTML5** | ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat&logo=html5&logoColor=white) | Semantic markup and structure |
-| **CSS3** | ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat&logo=css3&logoColor=white) | Modern styling and animations |
-| **Tailwind CSS v4** | ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat&logo=tailwind-css&logoColor=white) | Utility-first CSS framework |
 
 ### Backend
 | Technology | Badge | Description |
@@ -62,8 +48,7 @@ Membuat sebuah interaksi agar dapat mengurangi pengangguran di Indonesia
 
 ### Project Status
 - ✅ Project structure planning
-- 🚧 Frontend development (In Progress)
-- 📋 Backend API development (Planned)
+- 🚧 Backend API development (In Progress)
 - 📋 Database schema design (Planned)
 - 📋 Integration testing (Planned)
 
@@ -76,6 +61,10 @@ Membuat sebuah interaksi agar dapat mengurangi pengangguran di Indonesia
 
 > [!IMPORTANT]
 > As this is an academic project, development practices may vary as we learn and adapt. We strive to follow industry standards but acknowledge that consistency may improve over time as the team gains experience.
+
+## 🔗 Visit Frontend Repository 
+You can find the frontend repository for this project here:
+[Frontend-ALP-Kelompok1](https://github.com/Idkwhat77/Frontend-ALP-Kelompok1)
 
 ---
 *Last updated: June 2025*
