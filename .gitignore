@@ -1,50 +1,44 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
 
-# IDE / Editor specific
-.vscode/
-.idea/
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.js
-package-lock.json
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
 
-# testing
-/coverage
-
-# next.js
-/.next/
-/out/
-
-# production
-/build
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
 /dist/
+/nbdist/
+/.nb-gradle/
 build/
-out/
+!**/src/main/**/build/
+!**/src/test/**/build/
 
-# misc
-Thumbs.db
+### VS Code ###
+.vscode/
+
+### Additional Build Artifacts ###
+/bin/
+
+### OS ###
 .DS_Store
-*.pem
+Thumbs.db
 
-# debug
-logs/
+### Logs ###
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-pnpm-error.log*
-
-# local env files
-.env
-.env.local
-.env.*.local
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+logs/
