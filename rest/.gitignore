@@ -31,3 +31,14 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Additional Build Artifacts ###
+/bin/
+
+### OS ###
+.DS_Store
+Thumbs.db
+
+### Logs ###
+*.log
+logs/
