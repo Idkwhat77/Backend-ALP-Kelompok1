@@ -1,64 +1,184 @@
 package com.ruangkerja.rest.controller;
 
-import com.ruangkerja.rest.dto.*;
-import com.ruangkerja.rest.service.AuthService;
+import com.ruangkerja.rest.entity.User;
+import com.ruangkerja.rest.repository.UserRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
 @RestController
-@RequestMapping("/api/v1/auth")
+@RequestMapping("/api/auth")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*") // Enable CORS for frontend
+@CrossOrigin(origins = "*")
 @Tag(name = "Authentication API", description = "API endpoints for user authentication")
 public class AuthController {
-    
-    private final AuthService authService;
-    
-    @Operation(summary = "User Registration", description = "Register a new user account")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Registration successful"),
-        @ApiResponse(responseCode = "400", description = "Invalid input data"),
-        @ApiResponse(responseCode = "409", description = "Email already exists"),
-        @ApiResponse(responseCode = "500", description = "Internal server error")
-    })
+
+    private static final String SUCCESS_KEY = "success";
+    private static final String MESSAGE_KEY = "message";
+    private static final String USER_KEY = "user";
+
+    private final UserRepository userRepository;
+
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
-        AuthResponse response = authService.register(request);
-        
-        if (response.isSuccess()) {
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.badRequest().body(response);
-        }
-    }
-    
-    @Operation(summary = "User Login", description = "Authenticate user credentials")
+    @Operation(summary = "Register a new user")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Login successful"),
-        @ApiResponse(responseCode = "400", description = "Invalid credentials"),
-        @ApiResponse(responseCode = "401", description = "Authentication failed"),
-        @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "200", description = "User registered successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid input data"),
+            @ApiResponse(responseCode = "409", description = "User already exists")
     })
-    @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
-        AuthResponse response = authService.login(request);
-        
-        if (response.isSuccess()) {
+    public ResponseEntity<Map<String, Object>> register(@RequestBody Map<String, String> request) {
+        try {
+            String fullName = request.get("fullName");
+            String username = request.get("username");
+            String email = request.get("email");
+            String password = request.get("password");
+
+            // Basic validation
+            if (fullName == null || fullName.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(createErrorResponse("Full name is required"));
+            }
+            if (username == null || username.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(createErrorResponse("Username is required"));
+            }
+            if (email == null || email.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(createErrorResponse("Email is required"));
+            }
+            if (password == null || password.length() < 6) {
+                return ResponseEntity.badRequest().body(createErrorResponse("Password must be at least 6 characters"));
+            }
+
+            // Check if email or username already exists
+            if (userRepository.existsByEmail(email)) {
+                return ResponseEntity.badRequest().body(createErrorResponse("Email is already registered"));
+            }
+            if (userRepository.existsByUsername(username)) {
+                return ResponseEntity.badRequest().body(createErrorResponse("Username is already taken"));
+            }
+
+            // Create new user
+            User user = new User();
+            user.setFullName(fullName.trim());
+            user.setUsername(username.trim());
+            user.setEmail(email.trim());
+            user.setPassword(password); // In production, hash this password
+            user.setCreatedAt(LocalDateTime.now());
+            user.setUpdatedAt(LocalDateTime.now());
+            user.setIsActive(true);
+
+            User savedUser = userRepository.save(user);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put(SUCCESS_KEY, true);
+            response.put(MESSAGE_KEY, "User registered successfully");
+            response.put(USER_KEY, createUserResponse(savedUser));
+            
             return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.badRequest().body(response);
+            
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(createErrorResponse("Registration failed"));
         }
     }
-    
-    @Operation(summary = "Health Check", description = "Check if authentication service is running")
-    @GetMapping("/health")
-    public ResponseEntity<String> health() {
-        return ResponseEntity.ok("Authentication service is running!");
+
+    @PostMapping("/login")
+    @Operation(summary = "Login user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Login successful"),
+            @ApiResponse(responseCode = "400", description = "Invalid credentials"),
+            @ApiResponse(responseCode = "401", description = "Authentication failed")
+    })
+    public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> request) {
+        try {
+            String identifier = request.get("identifier"); // username or email
+            String password = request.get("password");
+
+            // Basic validation
+            if (identifier == null || identifier.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(createErrorResponse("Username or email is required"));
+            }
+            if (password == null || password.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(createErrorResponse("Password is required"));
+            }
+
+            // Find user by email or username
+            Optional<User> userOptional = userRepository.findByEmail(identifier.trim());
+            if (userOptional.isEmpty()) {
+                userOptional = userRepository.findByUsername(identifier.trim());
+            }
+
+            if (userOptional.isEmpty()) {
+                return ResponseEntity.badRequest().body(createErrorResponse("User not found"));
+            }
+
+            User user = userOptional.get();
+
+            // Check password (In production, use proper password hashing)
+            if (!user.getPassword().equals(password)) {
+                return ResponseEntity.badRequest().body(createErrorResponse("Invalid password"));
+            }
+
+            Map<String, Object> response = new HashMap<>();
+            response.put(SUCCESS_KEY, true);
+            response.put(MESSAGE_KEY, "Login successful");
+            response.put(USER_KEY, createUserResponse(user));
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(createErrorResponse("Login failed"));
+        }
+    }
+
+    @GetMapping("/me")
+    @Operation(summary = "Get current user info")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User info retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    public ResponseEntity<Map<String, Object>> getCurrentUser(@RequestParam Long userId) {
+        try {
+            Optional<User> userOptional = userRepository.findById(userId);
+            
+            if (userOptional.isEmpty()) {
+                return ResponseEntity.badRequest().body(createErrorResponse("User not found"));
+            }
+
+            User user = userOptional.get();
+            Map<String, Object> response = new HashMap<>();
+            response.put(SUCCESS_KEY, true);
+            response.put(USER_KEY, createUserResponse(user));
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(createErrorResponse("User not found"));
+        }
+    }
+
+    private Map<String, Object> createErrorResponse(String message) {
+        Map<String, Object> response = new HashMap<>();
+        response.put(SUCCESS_KEY, false);
+        response.put(MESSAGE_KEY, message);
+        return response;
+    }
+
+    private Map<String, Object> createUserResponse(User user) {
+        Map<String, Object> userResponse = new HashMap<>();
+        userResponse.put("id", user.getId());
+        userResponse.put("fullName", user.getFullName());
+        userResponse.put("username", user.getUsername());
+        userResponse.put("email", user.getEmail());
+        userResponse.put("isActive", user.getIsActive());
+        userResponse.put("createdAt", user.getCreatedAt());
+        userResponse.put("updatedAt", user.getUpdatedAt());
+        return userResponse;
     }
 }
