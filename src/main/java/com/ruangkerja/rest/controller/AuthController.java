@@ -1,11 +1,14 @@
 package com.ruangkerja.rest.controller;
 
+import com.ruangkerja.rest.dto.LoginRequest;
+import com.ruangkerja.rest.dto.RegisterRequest;
 import com.ruangkerja.rest.entity.User;
 import com.ruangkerja.rest.repository.UserRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,50 +29,43 @@ public class AuthController {
     private static final String MESSAGE_KEY = "message";
     private static final String USER_KEY = "user";
 
-    private final UserRepository userRepository;
-
-    @PostMapping("/register")
-    @Operation(summary = "Register a new user")
+    private final UserRepository userRepository;    @PostMapping("/register")
+    @Operation(summary = "Register a new user", description = "Create a new user account with the provided information")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User registered successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid input data"),
             @ApiResponse(responseCode = "409", description = "User already exists")
     })
-    public ResponseEntity<Map<String, Object>> register(@RequestBody Map<String, String> request) {
+    public ResponseEntity<Map<String, Object>> register(@Valid @RequestBody RegisterRequest request) {
         try {
-            String fullName = request.get("fullName");
-            String username = request.get("username");
-            String email = request.get("email");
-            String password = request.get("password");
-
             // Basic validation
-            if (fullName == null || fullName.trim().isEmpty()) {
+            if (request.getFullName() == null || request.getFullName().trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(createErrorResponse("Full name is required"));
             }
-            if (username == null || username.trim().isEmpty()) {
+            if (request.getUsername() == null || request.getUsername().trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(createErrorResponse("Username is required"));
             }
-            if (email == null || email.trim().isEmpty()) {
+            if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(createErrorResponse("Email is required"));
             }
-            if (password == null || password.length() < 6) {
+            if (request.getPassword() == null || request.getPassword().length() < 6) {
                 return ResponseEntity.badRequest().body(createErrorResponse("Password must be at least 6 characters"));
             }
 
             // Check if email or username already exists
-            if (userRepository.existsByEmail(email)) {
+            if (userRepository.existsByEmail(request.getEmail())) {
                 return ResponseEntity.badRequest().body(createErrorResponse("Email is already registered"));
             }
-            if (userRepository.existsByUsername(username)) {
+            if (userRepository.existsByUsername(request.getUsername())) {
                 return ResponseEntity.badRequest().body(createErrorResponse("Username is already taken"));
             }
 
             // Create new user
             User user = new User();
-            user.setFullName(fullName.trim());
-            user.setUsername(username.trim());
-            user.setEmail(email.trim());
-            user.setPassword(password); // In production, hash this password
+            user.setFullName(request.getFullName().trim());
+            user.setUsername(request.getUsername().trim());
+            user.setEmail(request.getEmail().trim());
+            user.setPassword(request.getPassword()); // In production, hash this password
             user.setCreatedAt(LocalDateTime.now());
             user.setUpdatedAt(LocalDateTime.now());
             user.setIsActive(true);
@@ -86,32 +82,27 @@ public class AuthController {
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(createErrorResponse("Registration failed"));
         }
-    }
-
-    @PostMapping("/login")
-    @Operation(summary = "Login user")
+    }    @PostMapping("/login")
+    @Operation(summary = "Login user", description = "Authenticate user with username/email and password")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Login successful"),
             @ApiResponse(responseCode = "400", description = "Invalid credentials"),
             @ApiResponse(responseCode = "401", description = "Authentication failed")
     })
-    public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> request) {
+    public ResponseEntity<Map<String, Object>> login(@Valid @RequestBody LoginRequest request) {
         try {
-            String identifier = request.get("identifier"); // username or email
-            String password = request.get("password");
-
             // Basic validation
-            if (identifier == null || identifier.trim().isEmpty()) {
+            if (request.getIdentifier() == null || request.getIdentifier().trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(createErrorResponse("Username or email is required"));
             }
-            if (password == null || password.trim().isEmpty()) {
+            if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(createErrorResponse("Password is required"));
             }
 
             // Find user by email or username
-            Optional<User> userOptional = userRepository.findByEmail(identifier.trim());
+            Optional<User> userOptional = userRepository.findByEmail(request.getIdentifier().trim());
             if (userOptional.isEmpty()) {
-                userOptional = userRepository.findByUsername(identifier.trim());
+                userOptional = userRepository.findByUsername(request.getIdentifier().trim());
             }
 
             if (userOptional.isEmpty()) {
@@ -121,7 +112,7 @@ public class AuthController {
             User user = userOptional.get();
 
             // Check password (In production, use proper password hashing)
-            if (!user.getPassword().equals(password)) {
+            if (!user.getPassword().equals(request.getPassword())) {
                 return ResponseEntity.badRequest().body(createErrorResponse("Invalid password"));
             }
 
