@@ -29,7 +29,9 @@ public class AuthController {
     private static final String MESSAGE_KEY = "message";
     private static final String USER_KEY = "user";
 
-    private final UserRepository userRepository;    @PostMapping("/register")
+    private final UserRepository userRepository;    
+    
+    @PostMapping("/register")
     @Operation(summary = "Register a new user", description = "Create a new user account with the provided information")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User registered successfully"),
@@ -39,12 +41,6 @@ public class AuthController {
     public ResponseEntity<Map<String, Object>> register(@Valid @RequestBody RegisterRequest request) {
         try {
             // Basic validation
-            if (request.getFullName() == null || request.getFullName().trim().isEmpty()) {
-                return ResponseEntity.badRequest().body(createErrorResponse("Full name is required"));
-            }
-            if (request.getUsername() == null || request.getUsername().trim().isEmpty()) {
-                return ResponseEntity.badRequest().body(createErrorResponse("Username is required"));
-            }
             if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(createErrorResponse("Email is required"));
             }
@@ -52,18 +48,13 @@ public class AuthController {
                 return ResponseEntity.badRequest().body(createErrorResponse("Password must be at least 6 characters"));
             }
 
-            // Check if email or username already exists
+            // Check if email already exists
             if (userRepository.existsByEmail(request.getEmail())) {
                 return ResponseEntity.badRequest().body(createErrorResponse("Email is already registered"));
-            }
-            if (userRepository.existsByUsername(request.getUsername())) {
-                return ResponseEntity.badRequest().body(createErrorResponse("Username is already taken"));
             }
 
             // Create new user
             User user = new User();
-            user.setFullName(request.getFullName().trim());
-            user.setUsername(request.getUsername().trim());
             user.setEmail(request.getEmail().trim());
             user.setPassword(request.getPassword()); // In production, hash this password
             user.setCreatedAt(LocalDateTime.now());
@@ -82,7 +73,8 @@ public class AuthController {
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(createErrorResponse("Registration failed"));
         }
-    }    @PostMapping("/login")
+    }    
+    @PostMapping("/login")
     @Operation(summary = "Login user", description = "Authenticate user with username/email and password")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Login successful"),
@@ -101,9 +93,6 @@ public class AuthController {
 
             // Find user by email or username
             Optional<User> userOptional = userRepository.findByEmail(request.getIdentifier().trim());
-            if (userOptional.isEmpty()) {
-                userOptional = userRepository.findByUsername(request.getIdentifier().trim());
-            }
 
             if (userOptional.isEmpty()) {
                 return ResponseEntity.badRequest().body(createErrorResponse("User not found"));
@@ -164,8 +153,6 @@ public class AuthController {
     private Map<String, Object> createUserResponse(User user) {
         Map<String, Object> userResponse = new HashMap<>();
         userResponse.put("id", user.getId());
-        userResponse.put("fullName", user.getFullName());
-        userResponse.put("username", user.getUsername());
         userResponse.put("email", user.getEmail());
         userResponse.put("isActive", user.getIsActive());
         userResponse.put("createdAt", user.getCreatedAt());
