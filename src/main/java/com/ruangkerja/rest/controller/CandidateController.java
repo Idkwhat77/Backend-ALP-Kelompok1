@@ -166,6 +166,32 @@ public class CandidateController {
         }
     }
 
+    @GetMapping("/by-user/{userId}")
+    @Operation(summary = "Get candidate by user ID", description = "Retrieve candidate information by user ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Candidate retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "Candidate not found")
+    })
+    public ResponseEntity<Map<String, Object>> getCandidateByUserId(@PathVariable Long userId) {
+        try {
+            Optional<Candidate> candidateOptional = candidateRepository.findByUserId(userId);
+            
+            if (candidateOptional.isEmpty()) {
+                return ResponseEntity.badRequest().body(createErrorResponse("Candidate not found for this user"));
+            }
+
+            Candidate candidate = candidateOptional.get();
+            Map<String, Object> response = new HashMap<>();
+            response.put(SUCCESS_KEY, true);
+            response.put(CANDIDATE_KEY, createCandidateResponse(candidate));
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(createErrorResponse("Failed to retrieve candidate"));
+        }
+    }
+
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete candidate", description = "Delete candidate by ID")
     @ApiResponses(value = {
