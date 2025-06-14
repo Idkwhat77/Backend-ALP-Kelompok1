@@ -11,13 +11,25 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/candidates")
@@ -26,13 +38,170 @@ import java.util.Optional;
 @Tag(name = "Candidate API", description = "API endpoints for candidate management")
 public class CandidateController {
 
+    private static final Logger logger = LoggerFactory.getLogger(CandidateController.class);
     private static final String SUCCESS_KEY = "success";
     private static final String MESSAGE_KEY = "message";
     private static final String CANDIDATE_KEY = "candidate";
     private static final String CANDIDATES_KEY = "candidates";
+    private static final String IMAGE_URL_KEY = "imageUrl";
 
     private final CandidateRepository candidateRepository;
     private final UserRepository userRepository;
+
+    @Value("${app.upload.dir:uploads/images/}")
+    private String uploadDir;
+
+    @PostMapping("/upload-image/user/{userId}")
+    @Operation(summary = "Upload candidate profile image by user ID", description = "Upload a profile image for the candidate associated with the specified user ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Image uploaded successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid file or candidate not found"),
+            @ApiResponse(responseCode = "500", description = "File upload failed")
+    })
+    public ResponseEntity<Map<String, Object>> uploadProfileImageByUserId(
+            @PathVariable Long userId,
+            @RequestParam("image") MultipartFile file) {
+        
+        try {
+            // Find candidate by user ID
+            Optional<Candidate> candidateOptional = candidateRepository.findByUserId(userId);
+            if (candidateOptional.isEmpty()) {
+                return ResponseEntity.badRequest().body(createErrorResponse("Candidate not found for this user"));
+            }
+
+            Candidate candidate = candidateOptional.get();
+
+            // Validate file
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest().body(createErrorResponse("Please select a file to upload"));
+            }
+
+            // Check file size (5MB limit)
+            if (file.getSize() > 5 * 1024 * 1024) {
+                return ResponseEntity.badRequest().body(createErrorResponse("File size exceeds 5MB limit"));
+            }
+
+            // Check file type
+            String contentType = file.getContentType();
+            if (contentType == null || !isValidImageType(contentType)) {
+                return ResponseEntity.badRequest().body(createErrorResponse("Invalid file type. Only JPG, PNG, GIF, WebP are allowed"));
+            }
+
+            // Create upload directory if it doesn't exist
+            Path uploadPath = Paths.get(uploadDir);
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+            }
+
+            // Generate unique filename
+            String originalFilename = file.getOriginalFilename();
+            if (originalFilename == null) {
+                return ResponseEntity.badRequest().body(createErrorResponse("Invalid file name"));
+            }
+            String cleanedOriginalFilename = StringUtils.cleanPath(originalFilename);
+            String fileExtension = getFileExtension(cleanedOriginalFilename);
+            String uniqueFilename = UUID.randomUUID().toString() + "_" + userId + "." + fileExtension;
+
+            // Delete old profile image if exists
+            if (candidate.getProfileImagePath() != null) {
+                deleteOldProfileImage(candidate.getProfileImagePath());
+            }
+
+            // Save file
+            Path targetLocation = uploadPath.resolve(uniqueFilename);
+            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+
+            // Update candidate profile image info
+            String imageUrl = "/api/v1/images/" + uniqueFilename;
+            candidate.setProfileImageUrl(imageUrl);
+            candidate.setProfileImagePath(targetLocation.toString());
+            candidate.setImageUploadDate(LocalDateTime.now());
+
+            candidateRepository.save(candidate);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put(SUCCESS_KEY, true);
+            response.put(MESSAGE_KEY, "Profile image uploaded successfully");
+            response.put(IMAGE_URL_KEY, imageUrl);
+            response.put(CANDIDATE_KEY, createCandidateResponse(candidate));
+
+            return ResponseEntity.ok(response);
+
+        } catch (IOException ex) {
+            return ResponseEntity.internalServerError().body(createErrorResponse("Failed to upload file: " + ex.getMessage()));
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError().body(createErrorResponse("Image upload failed"));
+        }
+    }
+
+    @DeleteMapping("/delete-image/user/{userId}")
+    @Operation(summary = "Delete candidate profile image by user ID", description = "Delete the profile image for the candidate associated with the specified user ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Image deleted successfully"),
+            @ApiResponse(responseCode = "400", description = "Candidate not found"),
+            @ApiResponse(responseCode = "404", description = "No image to delete")
+    })
+    public ResponseEntity<Map<String, Object>> deleteProfileImageByUserId(@PathVariable Long userId) {
+        try {
+            // Find candidate by user ID
+            Optional<Candidate> candidateOptional = candidateRepository.findByUserId(userId);
+            if (candidateOptional.isEmpty()) {
+                return ResponseEntity.badRequest().body(createErrorResponse("Candidate not found for this user"));
+            }
+
+            Candidate candidate = candidateOptional.get();
+
+            if (candidate.getProfileImagePath() == null) {
+                return ResponseEntity.badRequest().body(createErrorResponse("No profile image to delete"));
+            }
+
+            // Delete physical file
+            deleteOldProfileImage(candidate.getProfileImagePath());
+
+            // Clear candidate profile image info
+            candidate.setProfileImageUrl(null);
+            candidate.setProfileImagePath(null);
+            candidate.setImageUploadDate(null);
+
+            candidateRepository.save(candidate);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put(SUCCESS_KEY, true);
+            response.put(MESSAGE_KEY, "Profile image deleted successfully");
+            response.put(CANDIDATE_KEY, createCandidateResponse(candidate));
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError().body(createErrorResponse("Failed to delete image"));
+        }
+    }
+
+    @GetMapping("/user/{userId}")
+    @Operation(summary = "Get candidate by user ID", description = "Retrieve candidate information by user ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Candidate retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "Candidate not found for this user")
+    })
+    public ResponseEntity<Map<String, Object>> getCandidateByUserId(@PathVariable Long userId) {
+        try {
+            Optional<Candidate> candidateOptional = candidateRepository.findByUserId(userId);
+            
+            if (candidateOptional.isEmpty()) {
+                return ResponseEntity.badRequest().body(createErrorResponse("Candidate not found for this user"));
+            }
+
+            Candidate candidate = candidateOptional.get();
+            Map<String, Object> response = new HashMap<>();
+            response.put(SUCCESS_KEY, true);
+            response.put(CANDIDATE_KEY, createCandidateResponse(candidate));
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(createErrorResponse("Failed to retrieve candidate"));
+        }
+    }
     
     @PostMapping("/create")
     @Operation(summary = "Create a new candidate", description = "Create a new candidate profile with the provided information")
@@ -165,33 +334,7 @@ public class CandidateController {
             return ResponseEntity.internalServerError().body(createErrorResponse("Failed to update candidate"));
         }
     }
-  
-    @GetMapping("/by-user/{userId}")
-    @Operation(summary = "Get candidate by user ID", description = "Retrieve candidate information by user ID")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Candidate retrieved successfully"),
-            @ApiResponse(responseCode = "404", description = "Candidate not found")
-    })
-    public ResponseEntity<Map<String, Object>> getCandidateByUserId(@PathVariable Long userId) {
-        try {
-            Optional<Candidate> candidateOptional = candidateRepository.findByUserId(userId);
-            
-            if (candidateOptional.isEmpty()) {
-                return ResponseEntity.badRequest().body(createErrorResponse("Candidate not found for this user"));
-            }
 
-            Candidate candidate = candidateOptional.get();
-            Map<String, Object> response = new HashMap<>();
-            response.put(SUCCESS_KEY, true);
-            response.put(CANDIDATE_KEY, createCandidateResponse(candidate));
-            
-            return ResponseEntity.ok(response);
-            
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(createErrorResponse("Failed to retrieve candidate"));
-        }
-    }
-  
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete candidate", description = "Delete candidate by ID")
     @ApiResponses(value = {
@@ -219,6 +362,32 @@ public class CandidateController {
         }
     }
 
+    // Helper methods
+    private boolean isValidImageType(String contentType) {
+        return contentType.equals("image/jpeg") ||
+               contentType.equals("image/jpg") ||
+               contentType.equals("image/png") ||
+               contentType.equals("image/gif") ||
+               contentType.equals("image/webp") ||
+               contentType.equals("image/svg+xml");
+    }
+
+    private String getFileExtension(String filename) {
+        if (filename == null || filename.lastIndexOf('.') == -1) {
+            return "jpg"; // default extension
+        }
+        return filename.substring(filename.lastIndexOf('.') + 1).toLowerCase();
+    }
+
+    private void deleteOldProfileImage(String imagePath) {
+        try {
+            Path path = Paths.get(imagePath);
+            Files.deleteIfExists(path);
+        } catch (IOException ex) {
+            logger.error("Failed to delete old profile image: {}", imagePath, ex);
+        }
+    }
+
     private Map<String, Object> createErrorResponse(String message) {
         Map<String, Object> response = new HashMap<>();
         response.put(SUCCESS_KEY, false);
@@ -237,6 +406,9 @@ public class CandidateController {
         candidateResponse.put("jobType", candidate.getJobType());
         candidateResponse.put("industry", candidate.getIndustry());
         candidateResponse.put("employmentStatus", candidate.getEmploymentStatus());
+        candidateResponse.put("profileImageUrl", candidate.getProfileImageUrl());
+        candidateResponse.put("profileImagePath", candidate.getProfileImagePath());
+        candidateResponse.put("imageUploadDate", candidate.getImageUploadDate());
         return candidateResponse;
     }
 }
