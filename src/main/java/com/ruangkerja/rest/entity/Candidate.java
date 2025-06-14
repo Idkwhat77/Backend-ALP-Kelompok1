@@ -34,7 +34,7 @@ public class Candidate {
 
     @NotBlank(message = "Email is required")
     @Email(message = "Please provide a valid email address")
-    @Column(nullable = false, unique = true)
+    @Column(name = "contact_email", nullable = false)
     private String email;
 
     @NotNull(message = "Birth date is required")
