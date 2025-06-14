@@ -165,7 +165,7 @@ public class CandidateController {
             return ResponseEntity.internalServerError().body(createErrorResponse("Failed to update candidate"));
         }
     }
-
+  
     @GetMapping("/by-user/{userId}")
     @Operation(summary = "Get candidate by user ID", description = "Retrieve candidate information by user ID")
     @ApiResponses(value = {
@@ -191,7 +191,7 @@ public class CandidateController {
             return ResponseEntity.internalServerError().body(createErrorResponse("Failed to retrieve candidate"));
         }
     }
-
+  
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete candidate", description = "Delete candidate by ID")
     @ApiResponses(value = {
