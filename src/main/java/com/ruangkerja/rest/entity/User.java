@@ -38,15 +38,6 @@ public class User {
     private LocalDateTime updatedAt;    @Column(name = "is_active")
     private Boolean isActive = true;
 
-    @Column(name = "profile_image_url")
-    private String profileImageUrl;
-
-    @Column(name = "profile_image_path")
-    private String profileImagePath;
-
-    @Column(name = "image_upload_date")
-    private LocalDateTime imageUploadDate;
-
     @Column(name = "phone")
     private String phone;
 

@@ -10,6 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "candidates")
@@ -57,4 +58,12 @@ public class Candidate {
     @Column(name = "employment_status", nullable = false)
     private String employmentStatus;
 
+    @Column(name = "profile_image_url")
+    private String profileImageUrl;
+
+    @Column(name = "profile_image_path")
+    private String profileImagePath;
+
+    @Column(name = "image_upload_date")
+    private LocalDateTime imageUploadDate;
 }
