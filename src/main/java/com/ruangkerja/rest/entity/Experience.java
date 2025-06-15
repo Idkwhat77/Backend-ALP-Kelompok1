@@ -11,20 +11,20 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "education")
+@Table(name = "experience")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Education {
+public class Experience {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Institution name is required")
-    @Size(min = 2, max = 100, message = "Institution name must be between 2 and 100 characters")
-    @Column(name = "institution_name", nullable = false)
-    private String institutionName;
+    @NotBlank(message = "Experience name is required")
+    @Size(min = 2, max = 100, message = "Experience name must be between 2 and 100 characters")
+    @Column(name = "experience_name", nullable = false)
+    private String experienceName;
 
     @Column(name = "start_year")
     private Integer startYear;

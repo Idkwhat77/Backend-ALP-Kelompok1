@@ -74,4 +74,14 @@ public class Candidate {
 
     @OneToMany(mappedBy = "candidate", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Education> educations = new ArrayList<>();
+
+    @OneToMany(mappedBy = "candidate", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Experience> experiences = new ArrayList<>();
+
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
+    @JoinTable(name = "candidate_hobbies",
+            joinColumns = @JoinColumn(name = "candidate_id", foreignKey = @ForeignKey(name = "fk_candidate_hobbies_candidate")),
+            inverseJoinColumns = @JoinColumn(name = "hobby_id", foreignKey = @ForeignKey(name = "fk_candidate_hobbies_hobby")))
+    private List<Hobby> hobby = new ArrayList<>();
+
 }

@@ -1,15 +1,16 @@
 package com.ruangkerja.rest.repository;
 
-import com.ruangkerja.rest.entity.User;
+import com.ruangkerja.rest.entity.Hobby;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface HobbyRepository extends JpaRepository<Hobby, Long> {
+
+    Optional<Hobby> findByName(String name);
     
-    Optional<User> findByEmail(String email);
+    boolean existsByName(String name);
     
-    boolean existsByEmail(String email);
 }
