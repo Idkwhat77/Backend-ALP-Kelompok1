@@ -11,11 +11,11 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class EducationRequest {
-    
-    @NotBlank(message = "Institution name is required")
-    @Size(min = 2, max = 100, message = "Institution name must be between 2 and 100 characters")
-    private String institutionName;
+public class ExperienceRequest {
+
+    @NotBlank(message = "Experience name is required")
+    @Size(min = 2, max = 100, message = "Experience name must be between 2 and 100 characters")
+    private String experienceName;
 
     private Integer startYear;
     private Integer endYear;

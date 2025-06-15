@@ -320,6 +320,7 @@ public class CandidateController {
             candidate.setJobType(request.getJobType().trim());
             candidate.setIndustry(request.getIndustry().trim());
             candidate.setEmploymentStatus(request.getEmploymentStatus().trim());
+            candidate.setBiodata(request.getBiodata().trim());
 
             Candidate updatedCandidate = candidateRepository.save(candidate);
 

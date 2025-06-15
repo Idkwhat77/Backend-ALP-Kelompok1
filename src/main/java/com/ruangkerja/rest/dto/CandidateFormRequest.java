@@ -37,4 +37,6 @@ public class CandidateFormRequest {
 
     @NotBlank(message = "Employment status is required")
     private String employmentStatus;
+
+    private String biodata;
 }
