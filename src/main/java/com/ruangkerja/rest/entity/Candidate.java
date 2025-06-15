@@ -11,6 +11,8 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "candidates")
@@ -66,4 +68,10 @@ public class Candidate {
 
     @Column(name = "image_upload_date")
     private LocalDateTime imageUploadDate;
+
+    @Column(name = "biodata", columnDefinition = "TEXT")
+    private String biodata = "Please update your biodata to provide more information about yourself.";
+
+    @OneToMany(mappedBy = "candidate", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Education> educations = new ArrayList<>();
 }

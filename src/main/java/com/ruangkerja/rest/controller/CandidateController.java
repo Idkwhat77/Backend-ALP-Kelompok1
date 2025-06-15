@@ -406,6 +406,7 @@ public class CandidateController {
         candidateResponse.put("jobType", candidate.getJobType());
         candidateResponse.put("industry", candidate.getIndustry());
         candidateResponse.put("employmentStatus", candidate.getEmploymentStatus());
+        candidateResponse.put("biodata", candidate.getBiodata());
         candidateResponse.put("profileImageUrl", candidate.getProfileImageUrl());
         candidateResponse.put("profileImagePath", candidate.getProfileImagePath());
         candidateResponse.put("imageUploadDate", candidate.getImageUploadDate());
