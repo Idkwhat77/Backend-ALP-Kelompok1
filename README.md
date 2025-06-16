@@ -9,62 +9,47 @@ This is the backend repository for a Challenge Based Learning (CBL) project focu
 > [!NOTE]
 > This project is currently in development phase. Database configuration and deployment strategies may change for production environments.
 
+## 🔗 Visit Frontend Repository 
+You can find the frontend repository for this project here: 
+[**Frontend-ALP-Kelompok1**](https://github.com/Idkwhat77/Frontend-ALP-Kelompok1)
+
 ## 👥 Team Members
-1. Aristo Benedict Iskandar
-2. Exsel Octaviand Gosal
-3. M. Rifki Paranrengi
-4. Stella J. Chandra
+- **Aristo Benedict Iskandar**
+- **Exsel Octaviand Gosal**
+- **M. Rifki Paranrengi**
+- **Stella J. Chandra**
 
-## 💡 Project Overview
-
-This repository contains the backend implementation for the project.
-
-### Big Idea
-### Sosial : Pengangguran 
-Addressing unemployment challenges through digital innovation
-
-### Essential Question
-Bagaimana cara membuat interaksi agar dapat mengurangi pengangguran di Indonesia?
-
-### Challenge
-Membuat sebuah interaksi agar dapat mengurangi pengangguran di Indonesia
-
-## 🛠️ Tech Stack
-
-### Backend
-| Technology | Badge | Description |
-|------------|-------|-------------|
-| **Java Spring Boot** | ![Spring Boot](https://img.shields.io/badge/Spring_Boot-6DB33F?style=flat&logo=spring-boot&logoColor=white) | Enterprise-grade REST API framework |
-| **REST API Architecture** | ![REST API](https://img.shields.io/badge/REST-API-02569B?style=flat&logo=fastapi&logoColor=white) | RESTful web services design |
-
-### Database
-| Technology | Badge | Description |
-|------------|-------|-------------|
-| **MySQL** | ![MySQL](https://img.shields.io/badge/MySQL-00000F?style=flat&logo=mysql&logoColor=white) | Relational database management system *(Development)* |
-
-> **Note:** Database configuration may change for production deployment.
-
-## 📋 Development Guidelines
-
-### Project Status
-- ✅ Project structure planning
-- 🚧 Backend API development (In Progress)
-- 📋 Database schema design (Planned)
-- 📋 Integration testing (Planned)
-
-### Code Standards
-- Follow **Clean Code** principles
-- Implement proper **error handling**
-- Write **comprehensive tests**
-- Document **API endpoints**
-- Use **semantic commit messages**
 
 > [!IMPORTANT]
 > As this is an academic project, development practices may vary as we learn and adapt. We strive to follow industry standards but acknowledge that consistency may improve over time as the team gains experience.
 
-## 🔗 Visit Frontend Repository 
-You can find the frontend repository for this project here:
-[Frontend-ALP-Kelompok1](https://github.com/Idkwhat77/Frontend-ALP-Kelompok1)
+## 🛠️ Troubleshooting
+
+> [!WARNING]
+> Before making any database changes, ensure you have backed up important data. Dropping the database will permanently delete all existing records.
+
+### Common Issues
+
+#### XAMPP Not Running
+- **Problem**: Application fails to connect to database
+- **Solution**: Ensure XAMPP is running and MySQL service is active
+- **Check**: Verify MySQL is accessible at `localhost:3306`
+
+#### Database Schema Conflicts
+- **Problem**: Application fails to start due to column/table conflicts
+- **Solution**: Drop the existing database and restart the application
+- **Steps**: 
+  1. Delete the `ruangkerja` database from phpMyAdmin
+  2. Restart the Spring Boot application
+  3. The database will be automatically recreated with the updated schema
+
+#### Java Version Mismatch
+- **Problem**: Build fails or application won't start
+- **Solution**: Ensure your Java version matches the one specified in `pom.xml`
+- **Check**: Verify you're using Java 17+ as specified in the project configuration
+
+> [!TIP]
+> If you encounter persistent issues, try cleaning your Maven cache with `mvn clean install` and restart your IDE.
 
 ---
 *Last updated: June 2025*
