@@ -84,4 +84,15 @@ public class Candidate {
             inverseJoinColumns = @JoinColumn(name = "hobby_id", foreignKey = @ForeignKey(name = "fk_candidate_hobbies_hobby")))
     private List<Hobby> hobby = new ArrayList<>();
 
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
+    @JoinTable(name = "candidate_skills",
+            joinColumns = @JoinColumn(name = "candidate_id", foreignKey = @ForeignKey(name = "fk_candidate_skills_candidate")),
+            inverseJoinColumns = @JoinColumn(name = "skill_id", foreignKey = @ForeignKey(name = "fk_candidate_skills_skill")))
+    private List<Skill> skill = new ArrayList<>();
+
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
+    @JoinTable(name = "candidate_social_media",
+            joinColumns = @JoinColumn(name = "candidate_id", foreignKey = @ForeignKey(name = "fk_candidate_social_media_candidate")),
+            inverseJoinColumns = @JoinColumn(name = "social_media_id", foreignKey = @ForeignKey(name = "fk_candidate_social_media_social_media")))
+    private List<SocialMedia> socialMedias = new ArrayList<>();
 }
