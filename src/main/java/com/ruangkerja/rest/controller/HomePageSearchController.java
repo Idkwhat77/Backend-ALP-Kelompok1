@@ -23,32 +23,29 @@ public class HomePageSearchController {
         List<Map<String, Object>> results = new ArrayList<>();
         String q = query.toLowerCase();
 
-        // --- Search Company ---
+        // Search Company
         for (Company c : companyRepository.findAll()) {
             boolean match =
-                    (c.getCompanyName() != null && c.getCompanyName().toLowerCase().contains(q)) ||
-                    (c.getIndustry() != null && c.getIndustry().toLowerCase().contains(q)) ||
-                    (c.getHq() != null && c.getHq().toLowerCase().contains(q)) ||
-                    (c.getDescription() != null && c.getDescription().toLowerCase().contains(q)) ||
-                    (c.getEmail() != null && c.getEmail().toLowerCase().contains(q)) ||
-                    (c.getCompanySize() != null && String.valueOf(c.getCompanySize()).contains(q)) ||
-                    (c.getFoundationDate() != null && c.getFoundationDate().toString().contains(q));
+                (c.getCompanyName() != null && c.getCompanyName().toLowerCase().contains(q)) ||
+                (c.getIndustry() != null && c.getIndustry().toLowerCase().contains(q)) ||
+                (c.getHq() != null && c.getHq().toLowerCase().contains(q)) ||
+                (c.getDescription() != null && c.getDescription().toLowerCase().contains(q)) ||
+                (c.getEmail() != null && c.getEmail().toLowerCase().contains(q)) ||
+                (c.getCompanySize() != null && String.valueOf(c.getCompanySize()).contains(q)) ||
+                (c.getFoundationDate() != null && c.getFoundationDate().toString().contains(q));
+            // Tambahkan field lain jika ada
 
             if (match) {
                 Map<String, Object> map = new HashMap<>();
                 map.put("type", "company");
                 map.put("name", c.getCompanyName());
-                map.put("industry", c.getIndustry());
                 map.put("location", c.getHq());
-                map.put("description", c.getDescription());
-                map.put("email", c.getEmail());
-                map.put("companySize", c.getCompanySize());
-                map.put("foundationDate", c.getFoundationDate() != null ? c.getFoundationDate().format(java.time.format.DateTimeFormatter.ISO_DATE) : null);
+                // Tambahkan field lain jika ingin ditampilkan
                 results.add(map);
             }
         }
 
-        // --- Search Candidate ---
+        // Search Candidate
         for (Candidate cand : candidateRepository.findAll()) {
             boolean skillMatch = false;
             if (cand.getSkill() != null) {
@@ -60,26 +57,22 @@ public class HomePageSearchController {
                 }
             }
             boolean match =
-                    (cand.getFullName() != null && cand.getFullName().toLowerCase().contains(q)) ||
-                    (cand.getBiodata() != null && cand.getBiodata().toLowerCase().contains(q)) ||
-                    (cand.getEmail() != null && cand.getEmail().toLowerCase().contains(q)) ||
-                    (cand.getCity() != null && cand.getCity().toLowerCase().contains(q)) ||
-                    (cand.getJobType() != null && cand.getJobType().toLowerCase().contains(q)) ||
-                    (cand.getIndustry() != null && cand.getIndustry().toLowerCase().contains(q)) ||
-                    (cand.getEmploymentStatus() != null && cand.getEmploymentStatus().toLowerCase().contains(q)) ||
-                    skillMatch;
+                (cand.getFullName() != null && cand.getFullName().toLowerCase().contains(q)) ||
+                (cand.getBiodata() != null && cand.getBiodata().toLowerCase().contains(q)) ||
+                (cand.getEmail() != null && cand.getEmail().toLowerCase().contains(q)) ||
+                (cand.getCity() != null && cand.getCity().toLowerCase().contains(q)) ||
+                (cand.getJobType() != null && cand.getJobType().toLowerCase().contains(q)) ||
+                (cand.getIndustry() != null && cand.getIndustry().toLowerCase().contains(q)) ||
+                (cand.getEmploymentStatus() != null && cand.getEmploymentStatus().toLowerCase().contains(q)) ||
+                skillMatch;
+            // Tambahkan field lain jika ada
 
             if (match) {
                 Map<String, Object> map = new HashMap<>();
                 map.put("type", "candidate");
                 map.put("fullName", cand.getFullName());
-                map.put("skills", cand.getSkill() != null ? cand.getSkill().stream().map(Skill::getName).toList() : List.of());
-                map.put("biodata", cand.getBiodata());
-                map.put("email", cand.getEmail());
-                map.put("city", cand.getCity());
-                map.put("jobType", cand.getJobType());
-                map.put("industry", cand.getIndustry());
-                map.put("employmentStatus", cand.getEmploymentStatus());
+                map.put("location", cand.getCity());
+                // Tambahkan field lain jika ingin ditampilkan
                 results.add(map);
             }
         }
