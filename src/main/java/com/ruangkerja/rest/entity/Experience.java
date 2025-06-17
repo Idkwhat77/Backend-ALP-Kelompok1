@@ -34,7 +34,7 @@ public class Experience {
 
     @NotNull(message = "Candidate is required")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "candidate_id", nullable = false, foreignKey = @ForeignKey(name = "fk_education_candidate"))
+    @JoinColumn(name = "candidate_id", nullable = false, foreignKey = @ForeignKey(name = "fk_experience_candidate"))
     private Candidate candidate;
 
     @Column(name = "profile_image_url")
