@@ -28,8 +28,10 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/candidates")
@@ -229,6 +231,7 @@ public class CandidateController {
             candidate.setEmail(request.getEmail().trim());
             candidate.setBirthDate(request.getBirthDate());
             candidate.setCity(request.getCity().trim());
+            candidate.setProvince(request.getProvince());
             candidate.setJobType(request.getJobType().trim());
             candidate.setIndustry(request.getIndustry().trim());
             candidate.setEmploymentStatus(request.getEmploymentStatus().trim());
@@ -317,6 +320,7 @@ public class CandidateController {
             candidate.setEmail(request.getEmail().trim());
             candidate.setBirthDate(request.getBirthDate());
             candidate.setCity(request.getCity().trim());
+            candidate.setProvince(request.getProvince());
             candidate.setJobType(request.getJobType().trim());
             candidate.setIndustry(request.getIndustry().trim());
             candidate.setEmploymentStatus(request.getEmploymentStatus().trim());
@@ -363,6 +367,48 @@ public class CandidateController {
         }
     }
 
+    // Get unique provinces for filter dropdown
+    @GetMapping("/provinces")
+    public ResponseEntity<Map<String, Object>> getProvinces() {
+        try {
+            List<String> provinces = candidateRepository.findAll()
+                .stream()
+                .map(Candidate::getProvince)
+                .filter(Objects::nonNull)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+
+            Map<String, Object> response = new HashMap<>();
+            response.put(SUCCESS_KEY, true);
+            response.put("provinces", provinces);
+            return ResponseEntity.ok(response);
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError().body(createErrorResponse("Failed to fetch provinces: " + ex.getMessage()));
+        }
+    }
+
+    // Get cities by province
+    @GetMapping("/cities/{province}")
+    public ResponseEntity<Map<String, Object>> getCitiesByProvince(@PathVariable String province) {
+        try {
+            List<String> cities = candidateRepository.findByProvince(province)
+                .stream()
+                .map(Candidate::getCity)
+                .filter(Objects::nonNull)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+
+            Map<String, Object> response = new HashMap<>();
+            response.put(SUCCESS_KEY, true);
+            response.put("cities", cities);
+            return ResponseEntity.ok(response);
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError().body(createErrorResponse("Failed to fetch cities: " + ex.getMessage()));
+        }
+    }
+
     // Helper methods
     private boolean isValidImageType(String contentType) {
         return contentType.equals("image/jpeg") ||
@@ -404,6 +450,7 @@ public class CandidateController {
         candidateResponse.put("email", candidate.getEmail());
         candidateResponse.put("birthDate", candidate.getBirthDate());
         candidateResponse.put("city", candidate.getCity());
+        candidateResponse.put("province", candidate.getProvince());
         candidateResponse.put("jobType", candidate.getJobType());
         candidateResponse.put("industry", candidate.getIndustry());
         candidateResponse.put("employmentStatus", candidate.getEmploymentStatus());

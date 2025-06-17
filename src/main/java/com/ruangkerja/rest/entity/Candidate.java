@@ -1,5 +1,6 @@
 package com.ruangkerja.rest.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -48,6 +49,9 @@ public class Candidate {
     @Column(nullable = false)
     private String city;
 
+    @Column(name = "province")
+    private String province;
+
     @NotBlank(message = "Job type is required")
     @Column(name = "job_type", nullable = false)
     private String jobType;
@@ -90,9 +94,16 @@ public class Candidate {
             inverseJoinColumns = @JoinColumn(name = "skill_id", foreignKey = @ForeignKey(name = "fk_candidate_skills_skill")))
     private List<Skill> skill = new ArrayList<>();
 
-    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
-    @JoinTable(name = "candidate_social_media",
-            joinColumns = @JoinColumn(name = "candidate_id", foreignKey = @ForeignKey(name = "fk_candidate_social_media_candidate")),
-            inverseJoinColumns = @JoinColumn(name = "social_media_id", foreignKey = @ForeignKey(name = "fk_candidate_social_media_social_media")))
+    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(
+        name = "candidate_social_media",
+        joinColumns = @JoinColumn(name = "candidate_id"),
+        inverseJoinColumns = @JoinColumn(name = "social_media_id")
+    )
+    @JsonManagedReference("candidate-socials")
     private List<SocialMedia> socialMedias = new ArrayList<>();
+
+    @OneToMany(mappedBy = "candidate", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonManagedReference("candidate-portfolio")
+    private List<Portfolio> portfolioItems = new ArrayList<>();
 }
