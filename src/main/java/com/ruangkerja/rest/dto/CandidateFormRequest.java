@@ -28,6 +28,9 @@ public class CandidateFormRequest {
 
     @NotBlank(message = "City is required")
     private String city;
+    
+    @NotBlank(message = "Province is required")
+    private String province;
 
     @NotBlank(message = "Job type is required")
     private String jobType;

@@ -1,5 +1,6 @@
 package com.ruangkerja.rest.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -32,5 +33,6 @@ public class SocialMedia {
     private String url;
 
     @ManyToMany(mappedBy = "socialMedias", fetch = FetchType.LAZY)
+    @JsonBackReference("candidate-socials")
     private List<Candidate> candidates = new ArrayList<>();
 }
