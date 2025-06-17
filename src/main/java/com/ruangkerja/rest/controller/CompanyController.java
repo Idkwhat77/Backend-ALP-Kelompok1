@@ -11,6 +11,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -21,6 +25,7 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/company")
@@ -110,8 +115,14 @@ public class CompanyController {
             company.setEmail(companyForm.getEmail());
             company.setFoundationDate(companyForm.getFoundationDate());
             company.setHq(companyForm.getHq());
+            company.setProvince(companyForm.getProvince());
+            company.setCity(companyForm.getCity());
             company.setIndustry(companyForm.getIndustry());
             company.setCompanySize(companyForm.getCompanySize());
+            company.setDescription(companyForm.getDescription());
+            company.setWebsiteUrl(companyForm.getWebsiteUrl());
+            company.setPhoneNumber(companyForm.getPhoneNumber());
+            company.setCompanyType(companyForm.getCompanyType());
 
             Company saved = companyRepository.save(company);
             Map<String, Object> response = new HashMap<>();
@@ -124,16 +135,92 @@ public class CompanyController {
     }
 
     // --- Get all companies ---
+    // Enhanced get all companies with filtering
     @GetMapping
-    public ResponseEntity<Map<String, Object>> getAllCompanies() {
+    public ResponseEntity<Map<String, Object>> getAllCompanies(
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "province", required = false) String province,
+            @RequestParam(value = "city", required = false) String city,
+            @RequestParam(value = "industry", required = false) String industry,
+            @RequestParam(value = "sizeCategory", required = false) String sizeCategory,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sort", defaultValue = "companyName") String sort,
+            @RequestParam(value = "direction", defaultValue = "asc") String direction) {
         try {
-            List<Company> companies = companyRepository.findAll();
+            Pageable pageable = PageRequest.of(page, size,
+                Sort.by(Sort.Direction.fromString(direction), sort));
+
+            Page<Company> companies = companyRepository.findCompaniesWithFilters(
+                search, province, city, industry, sizeCategory, pageable);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put(SUCCESS_KEY, true);
+            response.put(COMPANIES_KEY, companies.getContent());
+            response.put("totalElements", companies.getTotalElements());
+            response.put("totalPages", companies.getTotalPages());
+            response.put("currentPage", companies.getNumber());
+            response.put("pageSize", companies.getSize());
+
+            return ResponseEntity.ok(response);
+        } catch (Exception ex) {
+            return error("ServerError", "Failed to fetch companies: " + ex.getMessage());
+        }
+    }
+
+    // Get featured companies
+    @GetMapping("/featured")
+    public ResponseEntity<Map<String, Object>> getFeaturedCompanies() {
+        try {
+            List<Company> companies = companyRepository.findByIsFeatured(true);
             Map<String, Object> response = new HashMap<>();
             response.put(SUCCESS_KEY, true);
             response.put(COMPANIES_KEY, companies);
             return ResponseEntity.ok(response);
         } catch (Exception ex) {
-            return error("ServerError", "Failed to fetch companies: " + ex.getMessage());
+            return error("ServerError", "Failed to fetch featured companies: " + ex.getMessage());
+        }
+    }
+
+    // Get unique provinces for filter dropdown
+    @GetMapping("/provinces")
+    public ResponseEntity<Map<String, Object>> getProvinces() {
+        try {
+            List<String> provinces = companyRepository.findAll()
+                .stream()
+                .map(Company::getProvince)
+                .filter(Objects::nonNull)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+
+            Map<String, Object> response = new HashMap<>();
+            response.put(SUCCESS_KEY, true);
+            response.put("provinces", provinces);
+            return ResponseEntity.ok(response);
+        } catch (Exception ex) {
+            return error("ServerError", "Failed to fetch provinces: " + ex.getMessage());
+        }
+    }
+
+    // Get cities by province
+    @GetMapping("/cities/{province}")
+    public ResponseEntity<Map<String, Object>> getCitiesByProvince(@PathVariable String province) {
+        try {
+            List<String> cities = companyRepository.findByProvince(province)
+                .stream()
+                .map(Company::getCity)
+                .filter(Objects::nonNull)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+
+            Map<String, Object> response = new HashMap<>();
+            response.put(SUCCESS_KEY, true);
+            response.put("cities", cities);
+            return ResponseEntity.ok(response);
+        } catch (Exception ex) {
+            return error("ServerError", "Failed to fetch cities: " + ex.getMessage());
         }
     }
 
@@ -193,8 +280,24 @@ public class CompanyController {
             toUpdate.setEmail(companyForm.getEmail());
             toUpdate.setFoundationDate(companyForm.getFoundationDate());
             toUpdate.setHq(companyForm.getHq());
+            toUpdate.setProvince(companyForm.getProvince());
+            toUpdate.setCity(companyForm.getCity());
             toUpdate.setIndustry(companyForm.getIndustry());
             toUpdate.setCompanySize(companyForm.getCompanySize());
+            
+            // Update optional fields only if provided
+            if (companyForm.getDescription() != null) {
+                toUpdate.setDescription(companyForm.getDescription());
+            }
+            if (companyForm.getWebsiteUrl() != null) {
+                toUpdate.setWebsiteUrl(companyForm.getWebsiteUrl());
+            }
+            if (companyForm.getPhoneNumber() != null) {
+                toUpdate.setPhoneNumber(companyForm.getPhoneNumber());
+            }
+            if (companyForm.getCompanyType() != null) {
+                toUpdate.setCompanyType(companyForm.getCompanyType());
+            }
 
             Company updated = companyRepository.save(toUpdate);
             Map<String, Object> response = new HashMap<>();

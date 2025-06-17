@@ -1,6 +1,7 @@
 package com.ruangkerja.rest.controller;
 
 import com.ruangkerja.rest.dto.MessageDto;
+import com.ruangkerja.rest.dto.ChatMessageWebSocketDto;
 import com.ruangkerja.rest.entity.Conversation;
 import com.ruangkerja.rest.entity.Message;
 import com.ruangkerja.rest.entity.User;
@@ -16,6 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -42,6 +44,10 @@ public class ChatController {
     
     @Autowired
     private CompanyRepository companyRepository;
+
+    // Add WebSocket messaging template
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
 
     // Get all conversations for a user with profile information
     @GetMapping("/conversations/{userId}")
@@ -117,10 +123,41 @@ public class ChatController {
             // Update or create conversation
             updateConversation(sender.get(), receiver.get(), savedMessage);
 
+            // Send real-time notification via WebSocket
+            sendRealTimeMessage(savedMessage, sender.get(), receiver.get());
+
             return ResponseEntity.ok(savedMessage);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }
+    }
+
+    private void sendRealTimeMessage(Message message, User sender, User receiver) {
+        // Get sender profile info
+        Map<String, Object> senderProfile = getUserProfileData(sender);
+        
+        // Create WebSocket message
+        ChatMessageWebSocketDto wsMessage = new ChatMessageWebSocketDto();
+        wsMessage.setId(message.getId());
+        wsMessage.setContent(message.getContent());
+        wsMessage.setSenderId(sender.getId());
+        wsMessage.setSenderName((String) senderProfile.get("fullName"));
+        wsMessage.setSenderProfileImageUrl((String) senderProfile.get("profileImageUrl"));
+        wsMessage.setReceiverId(receiver.getId());
+        wsMessage.setCreatedAt(message.getCreatedAt());
+        wsMessage.setType("message");
+
+        System.out.println("Sending real-time message to user: " + receiver.getId());
+        System.out.println("Message content: " + message.getContent());
+
+        // Send to specific user using their user ID as the principal name
+        messagingTemplate.convertAndSendToUser(
+            receiver.getId().toString(), 
+            "/queue/messages", 
+            wsMessage
+        );
+        
+        System.out.println("Message sent via WebSocket to user: " + receiver.getId());
     }
 
     // Mark messages as read
