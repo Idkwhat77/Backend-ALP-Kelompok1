@@ -37,10 +37,10 @@ public class HomePageSearchController {
 
             if (match) {
                 Map<String, Object> map = new HashMap<>();
-                map.put("type", "company");
+                map.put("id", c.getId());
                 map.put("name", c.getCompanyName());
-                map.put("location", c.getHq());
-                // Tambahkan field lain jika ingin ditampilkan
+                map.put("location", c.getHq()); // <-- pastikan ada
+                map.put("type", "company");
                 results.add(map);
             }
         }
@@ -69,10 +69,10 @@ public class HomePageSearchController {
 
             if (match) {
                 Map<String, Object> map = new HashMap<>();
-                map.put("type", "candidate");
+                map.put("id", cand.getId());
                 map.put("fullName", cand.getFullName());
-                map.put("location", cand.getCity());
-                // Tambahkan field lain jika ingin ditampilkan
+                map.put("city", cand.getCity()); // <-- pastikan ada
+                map.put("type", "candidate");
                 results.add(map);
             }
         }
