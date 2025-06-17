@@ -51,6 +51,13 @@ public class Company {
     @Column(nullable = false)
     private String hq;
 
+    // Enhanced location fields
+    @Column(name = "province")
+    private String province;
+
+    @Column(name = "city")
+    private String city;
+
     @NotBlank(message = "Industry is required")
     @Column(nullable = false)
     private String industry;
@@ -58,6 +65,10 @@ public class Company {
     @NotNull(message = "Company size is required")
     @Column(nullable = false)
     private Integer companySize;
+
+    // Add company size category for easier filtering
+    @Column(name = "size_category")
+    private String sizeCategory; // startup, small, medium, large, enterprise
 
     @Column(name = "profile_image_url")
     private String profileImageUrl;
@@ -69,5 +80,47 @@ public class Company {
     private LocalDateTime imageUploadDate;
 
     @Column(name = "description", columnDefinition = "TEXT")
-    private String description = "Please update your biodata to provide more information about yourself.";
+    private String description = "Please update your company description to provide more information.";
+
+    // Additional fields for better company profiles
+    @Column(name = "website_url")
+    private String websiteUrl;
+
+    @Column(name = "phone_number")
+    private String phoneNumber;
+
+    @Column(name = "company_type")
+    private String companyType; // Public, Private, Startup, etc.
+
+    @Column(name = "is_verified")
+    private Boolean isVerified = false;
+
+    @Column(name = "is_featured")
+    private Boolean isFeatured = false;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt = LocalDateTime.now();
+
+    // Automatically update the size category based on company size
+    @PrePersist
+    @PreUpdate
+    private void updateSizeCategory() {
+        if (companySize != null) {
+            if (companySize <= 50) {
+                this.sizeCategory = "startup";
+            } else if (companySize <= 200) {
+                this.sizeCategory = "small";
+            } else if (companySize <= 1000) {
+                this.sizeCategory = "medium";
+            } else if (companySize <= 5000) {
+                this.sizeCategory = "large";
+            } else {
+                this.sizeCategory = "enterprise";
+            }
+        }
+        this.updatedAt = LocalDateTime.now();
+    }
 }
