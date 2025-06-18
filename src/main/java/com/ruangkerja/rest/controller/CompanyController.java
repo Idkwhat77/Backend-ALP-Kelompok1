@@ -1,14 +1,20 @@
 package com.ruangkerja.rest.controller;
 
 import com.ruangkerja.rest.dto.CompanyFormRequest;
+import com.ruangkerja.rest.dto.EmployeeRequest;
 import com.ruangkerja.rest.entity.Company;
+import com.ruangkerja.rest.entity.Candidate;
 import com.ruangkerja.rest.entity.User;
 import com.ruangkerja.rest.repository.CompanyRepository;
+import com.ruangkerja.rest.repository.CandidateRepository;
 import com.ruangkerja.rest.repository.UserRepository;
+
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j; // Add this import
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -23,6 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -31,6 +38,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/company")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
+@Slf4j // Add this annotation for logging
 public class CompanyController {
 
     private static final String SUCCESS_KEY = "success";
@@ -42,6 +50,7 @@ public class CompanyController {
 
     private final CompanyRepository companyRepository;
     private final UserRepository userRepository;
+    private final CandidateRepository candidateRepository;
 
     @Value("${app.upload.dir:uploads/images/}")
     private String uploadDir;
@@ -232,7 +241,8 @@ public class CompanyController {
             if (company.isPresent()) {
                 Map<String, Object> response = new HashMap<>();
                 response.put(SUCCESS_KEY, true);
-                response.put(COMPANY_KEY, company.get());
+                // Use the same response format as getCompanyByUserId
+                response.put(COMPANY_KEY, createCompanyResponse(company.get()));
                 return ResponseEntity.ok(response);
             }
             return error("CompanyNotFound", "Company not found");
@@ -249,13 +259,42 @@ public class CompanyController {
             if (company.isPresent()) {
                 Map<String, Object> response = new HashMap<>();
                 response.put(SUCCESS_KEY, true);
-                response.put(COMPANY_KEY, company.get());
+                // Instead of returning the entity directly, map to a DTO or filter fields
+                response.put(COMPANY_KEY, createCompanyResponse(company.get()));
                 return ResponseEntity.ok(response);
             }
             return error("CompanyNotFound", "Company not found for this user");
         } catch (Exception ex) {
             return error("ServerError", "Failed to fetch company: " + ex.getMessage());
         }
+    }
+
+    // Add this helper method:
+    private Map<String, Object> createCompanyResponse(Company company) {
+        Map<String, Object> dto = new HashMap<>();
+        dto.put("id", company.getId());
+        dto.put("companyName", company.getCompanyName());
+        dto.put("email", company.getEmail());
+        dto.put("industry", company.getIndustry());
+        dto.put("companySize", company.getCompanySize());
+        dto.put("sizeCategory", company.getSizeCategory());
+        dto.put("profileImageUrl", company.getProfileImageUrl());
+        dto.put("description", company.getDescription());
+        dto.put("websiteUrl", company.getWebsiteUrl());
+        dto.put("phoneNumber", company.getPhoneNumber());
+        dto.put("hq", company.getHq());
+        dto.put("province", company.getProvince());
+        dto.put("city", company.getCity());
+        dto.put("foundationDate", company.getFoundationDate());
+        dto.put("isVerified", company.getIsVerified());
+        dto.put("isFeatured", company.getIsFeatured());
+        dto.put("createdAt", company.getCreatedAt());
+        dto.put("updatedAt", company.getUpdatedAt());
+        // ADD THIS LINE - Include userId for chat functionality
+        dto.put("userId", company.getUser() != null ? company.getUser().getId() : null);
+        // Optionally add user object as well
+        dto.put("user", company.getUser() != null ? Map.of("id", company.getUser().getId()) : null);
+        return dto;
     }
 
     // --- Update company (requires userId header) ---
@@ -464,6 +503,166 @@ public class CompanyController {
         } catch (Exception ex) {
             return error("ServerError", "Failed to update description: " + ex.getMessage());
         }
+    }
+
+    // --- Employee Management ---
+    @PostMapping("/{companyId}/employees")
+    @Operation(summary = "Add employee to company", description = "Add a candidate as an employee to the company")
+    public ResponseEntity<Map<String, Object>> addEmployee(
+            @PathVariable Long companyId,
+            @Valid @RequestBody EmployeeRequest request,
+            @RequestHeader(value = "X-User-Id", required = false) Long userId) {
+        
+        if (userId == null) {
+            return error("MissingUserId", "X-User-Id header is required");
+        }
+
+        try {
+            // Verify company ownership
+            Optional<Company> companyOptional = companyRepository.findById(companyId);
+            if (companyOptional.isEmpty()) {
+                return error("CompanyNotFound", "Company not found");
+            }
+
+            Company company = companyOptional.get();
+            if (!company.getUser().getId().equals(userId)) {
+                return error("Forbidden", "Forbidden: Not your company");
+            }
+
+            // Find candidate
+            Optional<Candidate> candidateOptional = candidateRepository.findById(request.getCandidateId());
+            if (candidateOptional.isEmpty()) {
+                return error("CandidateNotFound", "Candidate not found");
+            }
+
+            Candidate candidate = candidateOptional.get();
+
+            // Check if candidate is already an employee of another company
+            if (candidate.getEmployerCompany() != null && candidate.getIsActiveEmployee()) {
+                return error("AlreadyEmployed", "Candidate is already an active employee of another company");
+            }
+
+            // Set employee details
+            candidate.setEmployerCompany(company);
+            candidate.setPosition(request.getPosition());
+            candidate.setDepartment(request.getDepartment());
+            candidate.setHireDate(request.getHireDate() != null ? request.getHireDate() : LocalDate.now());
+            candidate.setEmployeeId(request.getEmployeeId());
+            candidate.setIsActiveEmployee(true);
+
+            candidateRepository.save(candidate);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put(SUCCESS_KEY, true);
+            response.put(MESSAGE_KEY, "Employee added successfully");
+            response.put("employee", createEmployeeResponse(candidate));
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception ex) {
+            return error("ServerError", "Failed to add employee: " + ex.getMessage());
+        }
+    }    @GetMapping("/{companyId}/employees")
+    @Operation(summary = "Get company employees", description = "Get all employees of a company")
+    public ResponseEntity<?> getCompanyEmployees(@PathVariable Long companyId, @RequestHeader("X-User-Id") Long userId) {
+        try {
+            // Replace companyService call with direct repository call
+            Optional<Company> companyOptional = companyRepository.findById(companyId);
+            if (companyOptional.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Company not found"));
+            }
+
+            Company company = companyOptional.get();
+
+            // Use repository method that doesn't trigger lazy loading issues
+            List<Candidate> employees = candidateRepository.findByEmployerCompanyIdAndIsActiveEmployee(companyId, true);
+            
+            // Convert to DTOs to avoid lazy loading serialization
+            List<Map<String, Object>> employeeDTOs = employees.stream().map(this::createEmployeeResponse).collect(Collectors.toList());
+            
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "employees", employeeDTOs
+            ));
+        } catch (Exception e) {
+            log.error("Error getting company employees: ", e); // Use log instead of logger
+            return ResponseEntity.status(500).body(Map.of("success", false, "message", "Error loading employees"));
+        }
+    }
+
+    @DeleteMapping("/{companyId}/employees/{candidateId}")
+    @Operation(summary = "Remove employee", description = "Remove an employee from the company")
+    public ResponseEntity<Map<String, Object>> removeEmployee(
+            @PathVariable Long companyId,
+            @PathVariable Long candidateId,
+            @RequestHeader(value = "X-User-Id", required = false) Long userId) {
+        
+        if (userId == null) {
+            return error("MissingUserId", "X-User-Id header is required");
+        }
+
+        try {
+            // Verify company ownership
+            Optional<Company> companyOptional = companyRepository.findById(companyId);
+            if (companyOptional.isEmpty()) {
+                return error("CompanyNotFound", "Company not found");
+            }
+
+            Company company = companyOptional.get();
+            if (!company.getUser().getId().equals(userId)) {
+                return error("Forbidden", "Forbidden: Not your company");
+            }
+
+            // Find employee
+            Optional<Candidate> candidateOptional = candidateRepository.findById(candidateId);
+            if (candidateOptional.isEmpty()) {
+                return error("CandidateNotFound", "Employee not found");
+            }
+
+            Candidate employee = candidateOptional.get();
+
+            // Verify employee belongs to this company
+            if (employee.getEmployerCompany() == null || 
+                !employee.getEmployerCompany().getId().equals(companyId)) {
+                return error("NotEmployee", "Candidate is not an employee of this company");
+            }
+
+            // Remove employment relationship
+            employee.setEmployerCompany(null);
+            employee.setPosition(null);
+            employee.setDepartment(null);
+            employee.setEmployeeId(null);
+            employee.setIsActiveEmployee(false);
+
+            candidateRepository.save(employee);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put(SUCCESS_KEY, true);
+            response.put(MESSAGE_KEY, "Employee removed successfully");
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception ex) {
+            return error("ServerError", "Failed to remove employee: " + ex.getMessage());
+        }
+    }    // Helper method to create employee response
+    private Map<String, Object> createEmployeeResponse(Candidate employee) {
+        Map<String, Object> employeeResponse = new HashMap<>();
+        employeeResponse.put("id", employee.getId());
+        employeeResponse.put("fullName", employee.getFullName());
+        employeeResponse.put("email", employee.getEmail());
+        employeeResponse.put("position", employee.getPosition());
+        employeeResponse.put("department", employee.getDepartment());
+        employeeResponse.put("employeeId", employee.getEmployeeId());
+        employeeResponse.put("hireDate", employee.getHireDate());
+        employeeResponse.put("profileImageUrl", employee.getProfileImageUrl());
+        employeeResponse.put("industry", employee.getIndustry());
+        employeeResponse.put("city", employee.getCity());
+        employeeResponse.put("province", employee.getProvince());
+        employeeResponse.put("birthDate", employee.getBirthDate());
+        employeeResponse.put("jobType", employee.getJobType());
+        employeeResponse.put("employmentStatus", employee.getEmploymentStatus());
+        return employeeResponse;
     }
 
     // --- Helper Methods ---

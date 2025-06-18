@@ -72,5 +72,6 @@ public class Job {
     // Company relationship - REQUIRED
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Company company;
 }
