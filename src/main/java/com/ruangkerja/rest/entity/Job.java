@@ -74,4 +74,15 @@ public class Job {
     @JoinColumn(name = "company_id", nullable = false)
     @com.fasterxml.jackson.annotation.JsonIgnore
     private Company company;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 }
