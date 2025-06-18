@@ -54,21 +54,19 @@ public class CompanyRatingController {
     public ResponseEntity<Map<String, Object>> createRating(
             @PathVariable Long companyId,
             @RequestBody Map<String, Object> ratingData,
-            @RequestHeader("Authorization") String authHeader) {
+            @RequestHeader(value = "X-User-Id", required = false) Long userId) {
         
         try {
-            // Extract user ID from auth token (implement according to your auth system)
-            Long reviewerId = extractUserIdFromToken(authHeader);
-            
-            if (reviewerId == null) {
+            // Validate user authentication
+            if (userId == null) {
                 Map<String, Object> errorResponse = new HashMap<>();
                 errorResponse.put("success", false);
-                errorResponse.put("message", "Authentication required");
-                return ResponseEntity.status(401).body(errorResponse);
+                errorResponse.put("message", "X-User-Id header is required");
+                return ResponseEntity.status(400).body(errorResponse);
             }
 
             // Check if user already rated this company
-            if (companyRatingService.hasUserRatedCompany(reviewerId, companyId)) {
+            if (companyRatingService.hasUserRatedCompany(userId, companyId)) {
                 Map<String, Object> errorResponse = new HashMap<>();
                 errorResponse.put("success", false);
                 errorResponse.put("message", "You have already rated this company");
@@ -77,7 +75,7 @@ public class CompanyRatingController {
 
             CompanyRating rating = new CompanyRating();
             rating.setCompanyId(companyId);
-            rating.setReviewerId(reviewerId);
+            rating.setReviewerId(userId);
             rating.setRating((Integer) ratingData.get("rating"));
             rating.setReview((String) ratingData.get("review"));
 
@@ -115,16 +113,29 @@ public class CompanyRatingController {
         }
     }
 
-    private Long extractUserIdFromToken(String authHeader) {
-        // Implement token parsing logic based on your authentication system
-        // This is a placeholder - replace with your actual implementation
+    @DeleteMapping("/{companyId}/ratings/{ratingId}")
+    public ResponseEntity<?> deleteCompanyRating(
+            @PathVariable Long companyId,
+            @PathVariable Long ratingId,
+            @RequestHeader("X-User-Id") Long userId) {
+        
         try {
-            String token = authHeader.replace("Bearer ", "");
-            // Parse JWT token and extract user ID
-            // Return the user ID from the token
-            return null; // Replace with actual implementation
+            // Verify the rating exists and belongs to the user
+            CompanyRating rating = companyRatingService.getRatingById(ratingId)
+                .orElseThrow(() -> new RuntimeException("Rating not found"));
+            
+            if (!rating.getReviewerId().equals(userId)) {
+                return ResponseEntity.status(403)
+                    .body(Map.of("success", false, "message", "You can only delete your own reviews"));
+            }
+            
+            companyRatingService.deleteRating(rating);
+            
+            return ResponseEntity.ok(Map.of("success", true, "message", "Review deleted successfully"));
+            
         } catch (Exception e) {
-            return null;
+            return ResponseEntity.status(500)
+                .body(Map.of("success", false, "message", e.getMessage()));
         }
     }
 }

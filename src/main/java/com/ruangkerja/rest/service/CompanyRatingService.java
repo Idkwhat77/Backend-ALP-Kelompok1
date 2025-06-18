@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class CompanyRatingService {
@@ -74,14 +75,11 @@ public class CompanyRatingService {
         return companyRatingRepository.findTopRatingsByCompanyId(companyId, limit);
     }
 
-    public void deleteRating(Long ratingId, Long reviewerId) {
-        CompanyRating rating = companyRatingRepository.findById(ratingId)
-                .orElseThrow(() -> new RuntimeException("Rating not found"));
-        
-        if (!rating.getReviewerId().equals(reviewerId)) {
-            throw new RuntimeException("Unauthorized to delete this rating");
-        }
-        
+    public void deleteRating(CompanyRating rating) {
         companyRatingRepository.delete(rating);
+    }
+
+    public Optional<CompanyRating> getRatingById(Long ratingId) {
+        return companyRatingRepository.findById(ratingId);
     }
 }
