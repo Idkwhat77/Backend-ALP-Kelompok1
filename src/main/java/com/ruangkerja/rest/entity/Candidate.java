@@ -1,6 +1,9 @@
 package com.ruangkerja.rest.entity;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -17,6 +20,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "candidates")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})  // Add this line
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -75,6 +79,29 @@ public class Candidate {
 
     @Column(name = "biodata", columnDefinition = "TEXT")
     private String biodata = "Please update your biodata to provide more information about yourself.";
+
+    // Company relationship - A candidate can be an employee of a company
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "employer_company_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "employees"})  // Add this
+    private Company employerCompany;
+    
+
+    // Employee specific fields
+    @Column(name = "position")
+    private String position; // Job position/title in the company
+
+    @Column(name = "department")
+    private String department; // Department within the company
+
+    @Column(name = "hire_date")
+    private LocalDate hireDate; // Date when hired by the company
+
+    @Column(name = "employee_id")
+    private String employeeId; // Company-specific employee ID
+
+    @Column(name = "is_active_employee")
+    private Boolean isActiveEmployee = false; // Whether currently employed
 
     @OneToMany(mappedBy = "candidate", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Education> educations = new ArrayList<>();

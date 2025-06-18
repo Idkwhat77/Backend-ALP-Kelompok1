@@ -1,6 +1,7 @@
 package com.ruangkerja.rest.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Min;
@@ -17,7 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "company")
+@Table(name = "companies")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})  // Add this line
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -31,6 +33,7 @@ public class Company {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(name = "fk_company_user"))
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private User user;
 
     @NotBlank(message = "Company name is required")
@@ -103,6 +106,17 @@ public class Company {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+    // Employees relationship - A company can have multiple employees
+    @OneToMany(mappedBy = "employerCompany", fetch = FetchType.LAZY)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "employerCompany"})
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private List<Candidate> employees = new ArrayList<>();
+
+    // Job postings relationship
+    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private List<Job> jobPostings = new ArrayList<>();
 
     // Automatically update the size category based on company size
     @PrePersist

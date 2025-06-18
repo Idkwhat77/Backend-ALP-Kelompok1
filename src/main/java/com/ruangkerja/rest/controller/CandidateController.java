@@ -458,6 +458,23 @@ public class CandidateController {
         candidateResponse.put("profileImageUrl", candidate.getProfileImageUrl());
         candidateResponse.put("profileImagePath", candidate.getProfileImagePath());
         candidateResponse.put("imageUploadDate", candidate.getImageUploadDate());
+        
+        // Employee information
+        candidateResponse.put("position", candidate.getPosition());
+        candidateResponse.put("department", candidate.getDepartment());
+        candidateResponse.put("hireDate", candidate.getHireDate());
+        candidateResponse.put("employeeId", candidate.getEmployeeId());
+        candidateResponse.put("isActiveEmployee", candidate.getIsActiveEmployee());
+        
+        // Company information if employee
+        if (candidate.getEmployerCompany() != null) {
+            Map<String, Object> companyInfo = new HashMap<>();
+            companyInfo.put("id", candidate.getEmployerCompany().getId());
+            companyInfo.put("name", candidate.getEmployerCompany().getCompanyName());
+            companyInfo.put("industry", candidate.getEmployerCompany().getIndustry());
+            candidateResponse.put("employerCompany", companyInfo);
+        }
+        
         return candidateResponse;
     }
 }
