@@ -219,6 +219,54 @@ public class JobController {
         }
     }
     
+    @Operation(summary = "Delete job posting", description = "Deletes a job posting (company owner only)")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> deleteJob(
+            @PathVariable Long id,
+            @RequestHeader(value = "X-User-Id", required = false) Long userId) {
+        
+        try {
+            // Validate user authentication
+            if (userId == null) {
+                return error("MissingUserId", "X-User-Id header is required");
+            }
+            
+            // Find the job
+            Optional<Job> jobOptional = jobRepository.findById(id);
+            if (jobOptional.isEmpty()) {
+                return error("JobNotFound", "Job not found");
+            }
+            
+            Job job = jobOptional.get();
+            
+            // Check if user owns the company that posted this job
+            Optional<Company> companyOptional = companyRepository.findByUserId(userId);
+            if (companyOptional.isEmpty()) {
+                return error("CompanyNotFound", "Company profile not found");
+            }
+            
+            Company company = companyOptional.get();
+            if (!job.getCompany().getId().equals(company.getId())) {
+                return error("Unauthorized", "You can only delete your own job postings");
+            }
+            
+            // Delete the job
+            jobRepository.delete(job);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Job deleted successfully");
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Failed to delete job: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
     private Map<String, Object> convertToDTO(Job job) {
         Map<String, Object> dto = new HashMap<>();
         dto.put("id", job.getId());
