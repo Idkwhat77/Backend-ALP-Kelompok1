@@ -100,6 +100,7 @@ public class JobController {
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
+            e.printStackTrace(); // Add this for debugging
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", "Failed to create job: " + e.getMessage());
