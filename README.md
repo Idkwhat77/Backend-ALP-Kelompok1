@@ -1,55 +1,115 @@
-# ALP Final Project - Kelompok 1 (Backend)
+<div align="center">
 
-[![Java](https://img.shields.io/badge/Java-17+-orange?style=flat&logo=openjdk)](https://openjdk.org/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.0+-green?style=flat&logo=springboot)](https://spring.io/projects/spring-boot)
-[![MySQL](https://img.shields.io/badge/MySQL-8.0+-4479A1?style=flat&logo=mysql&logoColor=white)](https://www.mysql.com/)
+# Backend - ALP Kelompok 1
 
-This is the backend repository for a Challenge Based Learning (CBL) project focused on creating an interactive platform to reduce unemployment in Indonesia. The project implements the server-side logic and API for a full-stack web application using modern technologies and follows professional development practices.
+**Challenge Based Learning Project Backend**
 
-> [!NOTE]
-> This project is currently in development phase. Database configuration and deployment strategies may change for production environments.
+![Java](https://img.shields.io/badge/java-%23ED8B00.svg?style=for-the-badge&logo=openjdk&logoColor=white)
+![Spring](https://img.shields.io/badge/spring-%236DB33F.svg?style=for-the-badge&logo=spring&logoColor=white)
+![MySQL](https://img.shields.io/badge/mysql-4479A1.svg?style=for-the-badge&logo=mysql&logoColor=white)
 
-## 🔗 Visit Frontend Repository 
-You can find the frontend repository for this project here: 
-[**Frontend-ALP-Kelompok1**](https://github.com/Idkwhat77/Frontend-ALP-Kelompok1)
+*Interactive platform backend for addressing unemployment challenges in Indonesia*
 
-## 👥 Team Members
-- **Aristo Benedict Iskandar**
-- **Exsel Octaviand Gosal**
-- **M. Rifki Paranrengi**
-- **Stella J. Chandra**
+</div>
 
+## 🔗 Related Repository
 
-> [!IMPORTANT]
-> As this is an academic project, development practices may vary as we learn and adapt. We strive to follow industry standards but acknowledge that consistency may improve over time as the team gains experience.
+**Frontend Repository:** [**Frontend-ALP-Kelompok1**](https://github.com/Idkwhat77/Frontend-ALP-Kelompok1)
 
-## 🛠️ Troubleshooting
+---
+
+## 📋 Overview
+
+RESTful API backend built with Spring Boot, providing comprehensive server-side functionality for an employment platform. Features user management, job matching algorithms, and real-time data processing with MySQL database integration.
+
+## ⚡ Quick Start
+
+### Prerequisites
+- [![Java 17+](https://img.shields.io/badge/Java-17+-ED8B00?style=flat&logo=openjdk&logoColor=white)](https://www.oracle.com/java/technologies/downloads/)
+- [![Maven 3.6+](https://img.shields.io/badge/Maven-3.6+-C71A36?style=flat&logo=apachemaven&logoColor=white)](https://maven.apache.org/download.cgi)
+- [![MySQL 8.0+](https://img.shields.io/badge/MySQL-8.0+-4479A1?style=flat&logo=mysql&logoColor=white)](https://dev.mysql.com/downloads/mysql/)
+- [![XAMPP](https://img.shields.io/badge/XAMPP-recommended-FB7A24?style=flat&logo=xampp&logoColor=white)](https://www.apachefriends.org/download.html)
+
+### Setup
+```bash
+# Clone repository
+git clone <repository-url>
+
+# Configure database
+# Start XAMPP MySQL service
+# Database 'ruangkerja' will be auto-created
+
+# Run application
+mvn spring-boot:run
+```
+
+**API Base URL:** `http://localhost:8080/api`
+
+## 🏗️ Architecture
+
+```
+Backend Structure
+├── Controllers     → REST API endpoints
+├── Services       → Business logic layer
+├── Repositories   → Data access layer
+├── Models         → Entity definitions
+└── Config         → Security & database setup
+```
+
+## 🔧 Key Features
+
+| Feature | Description |
+|---------|-------------|
+| **Authentication** | JWT-based user authentication |
+| **Job Management** | CRUD operations for job postings |
+| **User Profiles** | Comprehensive user management |
+| **Real-time Updates** | Live job matching notifications |
+| **Data Analytics** | Employment statistics and insights |
+
+## 👨‍💻 Development Team
+
+| Name | Role |
+|------|------|
+| **M. Rifki Paranrengi** | **Team Lead & Backend** |
+| **Aristo Benedict Iskandar** | **Backend Developer** |
+| **Exsel Octaviand Gosal** | **Frontend Developer** |
+| **Stella J. Chandra** | **Frontend Developer** |
+
+## 🚨 Development Notes
+
+> **✅ Project Completed:** This project has been completed as part of our ALP coursework. The API is fully functional and ready for deployment.
+
+## 🔧 Troubleshooting
 
 > [!WARNING]
 > Before making any database changes, ensure you have backed up important data. Dropping the database will permanently delete all existing records.
 
 ### Common Issues
 
-#### XAMPP Not Running
-- **Problem**: Application fails to connect to database
-- **Solution**: Ensure XAMPP is running and MySQL service is active
-- **Check**: Verify MySQL is accessible at `localhost:3306`
+**XAMPP Not Running**
+- **Problem:** Application fails to connect to database
+- **Solution:** Ensure XAMPP is running and MySQL service is active
+- **Check:** Verify MySQL is accessible at `localhost:3306`
 
-#### Database Schema Conflicts
-- **Problem**: Application fails to start due to column/table conflicts
-- **Solution**: Drop the existing database and restart the application
-- **Steps**: 
+**Database Schema Conflicts**
+- **Problem:** Application fails to start due to column/table conflicts
+- **Solution:** Drop the existing database and restart the application
+- **Steps:**
   1. Delete the `ruangkerja` database from phpMyAdmin
   2. Restart the Spring Boot application
   3. The database will be automatically recreated with the updated schema
 
-#### Java Version Mismatch
-- **Problem**: Build fails or application won't start
-- **Solution**: Ensure your Java version matches the one specified in `pom.xml`
-- **Check**: Verify you're using Java 17+ as specified in the project configuration
+**Java Version Mismatch**
+- **Problem:** Build fails or application won't start
+- **Solution:** Ensure your Java version matches the one specified in `pom.xml`
+- **Check:** Verify you're using Java 17+ as specified in the project configuration
 
 > [!TIP]
 > If you encounter persistent issues, try cleaning your Maven cache with `mvn clean install` and restart your IDE.
-
 ---
-*Last updated: June 2025*
+
+<div align="center">
+
+**ALP Kelompok 1 Backend** • *Last Updated: June 2025*
+
+</div>
