@@ -33,7 +33,7 @@ RESTful API backend built with Spring Boot, providing comprehensive server-side 
 ### Setup
 ```bash
 # Clone repository
-git clone <repository-url>
+git clone https://github.com/Idkwhat77/Backend-ALP-Kelompok1.git
 
 # Configure database
 # Start XAMPP MySQL service
